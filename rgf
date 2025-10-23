@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuition Receipt Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Print-specific styles */
+        @media print {
+            /* Hide everything except the receipt preview */
+            body * {
+                visibility: hidden;
+            }
+            #receipt-preview, #receipt-preview * {
+                visibility: visible;
+            }
+            /* Position the receipt at the top of the page */
+            #receipt-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                border: none;
+                box-shadow: none;
+            }
+            /* Hide the print button */
+            #print-button-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Tuition Receipt Generator</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- ====== Input Form ====== -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Receipt Details</h2>
+                
+                <form id="receipt-form">
+                    <!-- Business Details -->
+                    <fieldset class="mb-6">
+                        <legend class="text-lg font-medium text-indigo-600 mb-2">Your Business</legend>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="business-name" class="block text-sm font-medium text-gray-700">Business/Tutor Name</label>
+                                <input type="text" id="business-name" value="My Home Tuition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="business-contact" class="block text-sm font-medium text-gray-700">Contact (Phone/Email)</label>
+                                <input type="text" id="business-contact" value="contact@myhometuition.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Client Details -->
+                    <fieldset class="mb-6">
+                        <legend class="text-lg font-medium text-indigo-600 mb-2">Client Details</legend>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="client-name" class="block text-sm font-medium text-gray-700">Parent/Guardian Name</label>
+                                <input type="text" id="client-name" placeholder="Mr. / Mrs. Smith" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="student-name" class="block text-sm font-medium text-gray-700">Student Name</label>
+                                <input type="text" id="student-name" placeholder="John Smith" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Receipt Info -->
+                    <fieldset class="mb-6">
+                        <legend class="text-lg font-medium text-indigo-600 mb-2">Receipt Info</legend>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label for="receipt-number" class="block text-sm font-medium text-gray-700">Receipt #</label>
+                                <input type="text" id="receipt-number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50">
+                            </div>
+                            <div>
+                                <label for="receipt-date" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="receipt-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                             <div>
+                                <label for="payment-method" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                                <select id="payment-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option>Cash</option>
+                                    <option>Bank Transfer</option>
+                                    <option>Credit Card</option>
+                                    <option>Online Payment</option>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- Line Items -->
+                    <fieldset class="mb-6">
+                        <legend class="text-lg font-medium text-indigo-600 mb-2">Services</legend>
+                        <div id="line-items-container" class="space-y-4">
+                            <!-- Line items will be injected here by JS -->
+                        </div>
+                        <button type="button" id="add-item-btn" class="mt-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            + Add Service
+                        </button>
+                    </fieldset>
+
+                    <!-- Summary -->
+                    <fieldset>
+                        <legend class="text-lg font-medium text-indigo-600 mb-2">Summary</legend>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="discount" class="block text-sm font-medium text-gray-700">Discount ($)</label>
+                                <input type="number" id="discount" value="0" min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="tax" class="block text-sm font-medium text-gray-700">Tax (%)</label>
+                                <input type="number" id="tax" value="0" min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+
+            <!-- ====== Receipt Preview ====== -->
+            <div class="bg-white p-8 md:p-12 rounded-lg shadow-lg" id="receipt-preview">
+                <div class="w-full max-w-2xl mx-auto">
+                    
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <h2 id="preview-business-name" class="text-3xl font-bold text-gray-900">My Home Tuition</h2>
+                            <p id="preview-business-contact" class="text-sm text-gray-500">contact@myhometuition.com</p>
+                        </div>
+                        <div class="text-right">
+                            <h3 class="text-2xl font-semibold uppercase text-gray-800">Receipt</h3>
+                            <p class="text-sm text-gray-500">#<span id="preview-receipt-number">0001</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Bill To & Date -->
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">Billed To</h4>
+                            <p id="preview-client-name" class="font-medium text-gray-800">Mr. / Mrs. Smith</p>
+                            <p id="preview-student-name" class="text-gray-600">Student: John Smith</p>
+                        </div>
+                        <div class="text-right">
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">Date</h4>
+                            <p id="preview-date" class="font-medium text-gray-800">Oct 23, 2025</p>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <table class="w-full mb-8">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200">
+                                <th class="text-left font-semibold text-gray-600 uppercase p-3">Service</th>
+                                <th class="text-center font-semibold text-gray-600 uppercase p-3">Hours/Qty</th>
+                                <th class="text-right font-semibold text-gray-600 uppercase p-3">Rate</th>
+                                <th class="text-right font-semibold text-gray-600 uppercase p-3">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-items-body">
+                            <!-- Preview items will be injected here by JS -->
+                        </tbody>
+                    </table>
+
+                    <!-- Summary -->
+                    <div class="flex justify-end mb-8">
+                        <div class="w-full sm:w-1/2 md:w-2/5 space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Subtotal</span>
+                                <span id="preview-subtotal" class="font-medium text-gray-800">$0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Discount</span>
+                                <span id="preview-discount" class="font-medium text-gray-800">-$0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Tax (<span id="preview-tax-rate">0</span>%)</span>
+                                <span id="preview-tax" class="font-medium text-gray-800">$0.00</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-200 pt-3">
+                                <span class="font-bold text-gray-800">Total</span>
+                                <span id="preview-total" class="font-bold text-gray-800">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Paid -->
+                    <div class="bg-indigo-50 rounded-lg p-6 text-center">
+                        <p class="text-sm text-indigo-700 uppercase">Amount Paid</p>
+                        <p id="preview-total-paid" class="text-4xl font-bold text-indigo-900 my-2">$0.00</p>
+                        <p class="text-sm text-indigo-600">Paid via <span id="preview-payment-method" class="font-semibold">Cash</span></p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="text-center text-gray-500 text-sm mt-12">
+                        <p>Thank you for your payment!</p>
+                        <p>Questions? Email us at <span id="footer-business-contact">contact@myhometuition.com</span></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        
+        <!-- Print Button -->
+        <div id="print-button-container" class="text-center mt-8">
+            <button id="print-btn" class="px-10 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Print Receipt
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('receipt-form');
+            const lineItemsContainer = document.getElementById('line-items-container');
+            const addItemBtn = document.getElementById('add-item-btn');
+            const printBtn = document.getElementById('print-btn');
+
+            // --- Helper Functions ---
+
+            // Format date to "Month Day, Year"
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString + 'T00:00:00'); // Fix for time-zone issues
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                });
+            };
+
+            // Format number to currency
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                }).format(amount);
+            };
+
+            // --- Core Functions ---
+
+            // Create a new line item input row
+            const createLineItem = () => {
+                const itemRow = document.createElement('div');
+                itemRow.className = 'grid grid-cols-12 gap-x-2 gap-y-3 line-item-row items-end';
+                
+                itemRow.innerHTML = `
+                    <div class="col-span-12 sm:col-span-6">
+                        <label class="block text-sm font-medium text-gray-700">Service Description</label>
+                        <input type="text" name="description" placeholder="Math Tutoring" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="col-span-6 sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Qty/Hrs</label>
+                        <input type="number" name="quantity" value="1" min="0" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="col-span-6 sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Rate ($)</label>
+                        <input type="number" name="rate" value="50" min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="col-span-12 sm:col-span-2 text-right">
+                        <button type="button" class="remove-item-btn px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            Remove
+                        </button>
+                    </div>
+                `;
+
+                // Add event listener for the remove button
+                itemRow.querySelector('.remove-item-btn').addEventListener('click', () => {
+                    itemRow.remove();
+                    updatePreview();
+                });
+                
+                return itemRow;
+            };
+
+            // Update the receipt preview based on form inputs
+            const updatePreview = () => {
+                // Business & Client Info
+                document.getElementById('preview-business-name').textContent = document.getElementById('business-name').value || 'Your Business Name';
+                const businessContact = document.getElementById('business-contact').value || 'Your Contact';
+                document.getElementById('preview-business-contact').textContent = businessContact;
+                document.getElementById('footer-business-contact').textContent = businessContact;
+                
+                document.getElementById('preview-client-name').textContent = document.getElementById('client-name').value || 'Client Name';
+                document.getElementById('preview-student-name').textContent = 'Student: ' + (document.getElementById('student-name').value || 'Student Name');
+                
+                // Receipt Info
+                document.getElementById('preview-receipt-number').textContent = document.getElementById('receipt-number').value || '0001';
+                document.getElementById('preview-date').textContent = formatDate(document.getElementById('receipt-date').value);
+                document.getElementById('preview-payment-method').textContent = document.getElementById('payment-method').value;
+
+                // Line Items & Calculations
+                const itemsBody = document.getElementById('preview-items-body');
+                itemsBody.innerHTML = ''; // Clear existing items
+                
+                let subtotal = 0;
+                const itemRows = lineItemsContainer.querySelectorAll('.line-item-row');
+                
+                itemRows.forEach(row => {
+                    const description = row.querySelector('input[name="description"]').value || 'Service';
+                    const quantity = parseFloat(row.querySelector('input[name="quantity"]').value) || 0;
+                    const rate = parseFloat(row.querySelector('input[name="rate"]').value) || 0;
+                    const amount = quantity * rate;
+                    subtotal += amount;
+                    
+                    const previewRow = document.createElement('tr');
+                    previewRow.className = 'border-b border-gray-100';
+                    previewRow.innerHTML = `
+                        <td class="p-3 align-top">${description}</td>
+                        <td class="p-3 text-center align-top">${quantity}</td>
+                        <td class="p-3 text-right align-top">${formatCurrency(rate)}</td>
+                        <td class="p-3 text-right align-top font-medium">${formatCurrency(amount)}</td>
+                    `;
+                    itemsBody.appendChild(previewRow);
+                });
+
+                // Summary Calculations
+                const discount = parseFloat(document.getElementById('discount').value) || 0;
+                const taxRate = parseFloat(document.getElementById('tax').value) || 0;
+                const taxAmount = (subtotal - discount) * (taxRate / 100);
+                const total = subtotal - discount + taxAmount;
+
+                // Update Summary Preview
+                document.getElementById('preview-subtotal').textContent = formatCurrency(subtotal);
+                document.getElementById('preview-discount').textContent = `-${formatCurrency(discount)}`;
+                document.getElementById('preview-tax-rate').textContent = taxRate;
+                document.getElementById('preview-tax').textContent = formatCurrency(taxAmount);
+                document.getElementById('preview-total').textContent = formatCurrency(total);
+                document.getElementById('preview-total-paid').textContent = formatCurrency(total);
+            };
+
+            // --- Event Listeners ---
+            
+            // Add new line item
+            addItemBtn.addEventListener('click', () => {
+                lineItemsContainer.appendChild(createLineItem());
+                updatePreview();
+            });
+
+            // Update preview on any form change
+            form.addEventListener('input', updatePreview);
+            form.addEventListener('change', updatePreview); // For select dropdown
+
+            // Print receipt
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+
+            // --- Initialization ---
+
+            // Set default date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('receipt-date').value = today;
+
+            // Set default receipt number
+            document.getElementById('receipt-number').value = `T-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`;
+
+            // Add one initial line item
+            lineItemsContainer.appendChild(createLineItem());
+            
+            // Initial call to populate the preview
+            updatePreview();
+        });
+    </script>
+</body>
+</html>
