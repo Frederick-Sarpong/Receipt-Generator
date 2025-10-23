@@ -1,2 +1,0 @@
-# Receipt-Generator
-Receipt generation
